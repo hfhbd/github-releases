@@ -59,7 +59,7 @@ publishing {
             scm {
                 connection.set("scm:git://github.com/hfhbd/github-releases.git")
                 developerConnection.set("scm:git://github.com/hfhbd/github-releases.git")
-                url.set("https://github.com/hfhbd/githubreleases")
+                url.set("https://github.com/hfhbd/github-releases")
             }
             distributionManagement {
                 repository {
