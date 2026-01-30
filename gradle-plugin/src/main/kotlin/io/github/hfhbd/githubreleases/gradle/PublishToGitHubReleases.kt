@@ -23,9 +23,14 @@ abstract class PublishToGitHubRelease : DefaultTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val uploadFiles: ConfigurableFileCollection
 
-    @get:Input abstract val token: Property<String>
-    @get:Input abstract val apiUrl: Property<String>
-    @get:Input abstract val uploadUrl: Property<String>
+    @get:Input
+    abstract val token: Property<String>
+
+    @get:Input
+    abstract val apiUrl: Property<String>
+
+    @get:Input
+    abstract val uploadUrl: Property<String>
 
     @get:Inject
     internal abstract val workerExecutor: WorkerExecutor
@@ -39,12 +44,18 @@ abstract class PublishToGitHubRelease : DefaultTask() {
             classpath.from(workerClassPath)
         }
 
-        for (file in uploadFiles) {
-            worker.submit(PublishWorker::class.java) {
-                this.apiUrl.set(this@PublishToGitHubRelease.apiUrl)
-                this.uploadUrl.set(this@PublishToGitHubRelease.uploadUrl)
-                this.token.set(this@PublishToGitHubRelease.token)
-                this.file.set(file)
+        for (entry in uploadFiles) {
+            for (file in entry.walk()) {
+                if (file.name.startsWith("maven-metadata.xml")) {
+                    continue
+                }
+
+                worker.submit(PublishWorker::class.java) {
+                    this.apiUrl.set(this@PublishToGitHubRelease.apiUrl)
+                    this.uploadUrl.set(this@PublishToGitHubRelease.uploadUrl)
+                    this.token.set(this@PublishToGitHubRelease.token)
+                    this.file.set(file)
+                }
             }
         }
     }
