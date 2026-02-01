@@ -46,17 +46,17 @@ abstract class PublishToGitHubRelease : DefaultTask() {
 
         for (entry in uploadFiles) {
             for (file in entry.walk()) {
-                if (file.name.startsWith("maven-metadata.xml")) {
-                    continue
-                }
-
-                worker.submit(PublishWorker::class.java) {
-                    this.apiUrl.set(this@PublishToGitHubRelease.apiUrl)
-                    this.uploadUrl.set(this@PublishToGitHubRelease.uploadUrl)
-                    this.token.set(this@PublishToGitHubRelease.token)
-                    this.file.set(file)
+                if (file.isFile && file.name.startsNotWith("maven-metadata.xml")) {
+                    worker.submit(PublishWorker::class.java) {
+                        this.apiUrl.set(this@PublishToGitHubRelease.apiUrl)
+                        this.uploadUrl.set(this@PublishToGitHubRelease.uploadUrl)
+                        this.token.set(this@PublishToGitHubRelease.token)
+                        this.file.set(file)
+                    }
                 }
             }
         }
     }
 }
+
+private fun String.startsNotWith(prefix: String) = !startsWith(prefix)
