@@ -20,6 +20,7 @@ import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.jsonIo
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
@@ -87,7 +88,9 @@ internal fun <T : HttpClientEngineConfig> HttpClientConfig<T>.configureGitHub(
         bearerAuth(token)
     }
     install(ContentNegotiation) {
-        jsonIo()
+        jsonIo(Json {
+            ignoreUnknownKeys = true
+        })
     }
 }
 
