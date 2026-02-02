@@ -31,6 +31,8 @@ val publishToGitHubRelease by tasks.registering(PublishToGitHubRelease::class) {
     group = PublishingPlugin.PUBLISH_TASK_GROUP
     this.uploadFiles.from(repoFiles)
     workerClassPath.from(githubReleasesWorkerClassPath)
+    token.convention(providers.environmentVariable("GITHUB_TOKEN"))
+    apiUrl.convention(providers.environmentVariable("GITHUB_API_URL"))
 }
 
 tasks.publish {
