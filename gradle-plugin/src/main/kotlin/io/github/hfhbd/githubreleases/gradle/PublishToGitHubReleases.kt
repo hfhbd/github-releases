@@ -13,6 +13,7 @@ import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskAction
 import org.gradle.work.DisableCachingByDefault
 import org.gradle.workers.WorkerExecutor
+import java.io.File
 import javax.inject.Inject
 
 @DisableCachingByDefault
@@ -44,19 +45,56 @@ abstract class PublishToGitHubRelease : DefaultTask() {
             classpath.from(workerClassPath)
         }
 
-        for (entry in uploadFiles) {
-            for (file in entry.walk()) {
-                if (file.isFile && file.name.startsNotWith("maven-metadata.xml")) {
-                    worker.submit(PublishWorker::class.java) {
-                        this.apiUrl.set(this@PublishToGitHubRelease.apiUrl)
-                        this.uploadUrl.set(this@PublishToGitHubRelease.uploadUrl)
-                        this.token.set(this@PublishToGitHubRelease.token)
-                        this.file.set(file)
-                    }
-                }
+        for (entry in uploadFiles.getFilesAndDigests()) {
+            worker.submit(PublishWorker::class.java) {
+                this.apiUrl.set(this@PublishToGitHubRelease.apiUrl)
+                this.uploadUrl.set(this@PublishToGitHubRelease.uploadUrl)
+                this.token.set(this@PublishToGitHubRelease.token)
+                this.file.set(entry.file)
+                this.digests.set(entry.digests)
             }
         }
     }
 }
 
-private fun String.startsNotWith(prefix: String) = !startsWith(prefix)
+internal fun Iterable<File>.getFilesAndDigests(): List<FileAndDigests> {
+    val realFiles = mutableListOf<FileAndDigests>()
+
+    for (entry in this) {
+        for (file in entry.walk()) {
+            if (file.isDirectory) {
+                continue
+            }
+
+            if (file.name.startsWith("maven-metadata.xml")) {
+                continue
+            }
+
+            if (
+                file.name.endsWith(".md5") ||
+                file.name.endsWith(".sha1") ||
+                file.name.endsWith(".sha256") ||
+                file.name.endsWith(".sha512")
+                ) {
+                continue
+            }
+
+            realFiles.add(
+                FileAndDigests(
+                    file = file,
+                    digests = mapOf(
+                        "sha256" to File(file.parentFile, file.name + ".sha256").readText(),
+                        "sha512" to File(file.parentFile, file.name + ".sha512").readText(),
+                    )
+                )
+            )
+        }
+    }
+
+    return realFiles
+}
+
+internal data class FileAndDigests(
+    val file: File,
+    val digests: Map<String, String>,
+)
