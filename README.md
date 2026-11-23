@@ -1,6 +1,6 @@
 # github-releases
 
-Project isolation compatible publishing plugin to upload files to an existing GitHub Release.
+Project isolation compatible publishing plugin to upload files as release artifacts to an existing GitHub Release.
 
 ## Install
 
@@ -29,4 +29,3 @@ plugins {
 You need to setup and configure the publications using the core `maven-publish` plugins.
 
 To publish the publications, call `./gradlew publishToGitHub -PgithubToken=GITHUB_TOKEN`.
-Publishing uses the automatic behavior.
